@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 from __future__ import unicode_literals, print_function
 
 import os, sys
@@ -347,6 +347,12 @@ class PAMenu(dict):
             raise PAUpdate
         self._mute_val_cache[item] = val, time()
 
+    def key_i(self, i):
+        try:
+            return list(self)[i]
+        except IndexError:
+            return ''
+
     def next_key(self, item):
         try:
             return (list(it.dropwhile(lambda k: k != item, self)) + list(self) * 2)[1]
@@ -429,6 +435,8 @@ def interactive_cli(stdscr, items, border=0):
 
     win = curses.newwin(*(win_size() + (border, border)))
     win.keypad(True)
+    curses.mousemask(curses.ALL_MOUSE_EVENTS)
+    curses.mouseinterval(1)
 
     hl = next(iter(items)) if items else ''
     optz.adjust_step /= 100.0
@@ -458,6 +466,19 @@ def interactive_cli(stdscr, items, border=0):
         log.debug('Keypress event: {}'.format(key))
 
         try:
+            if key == curses.KEY_MOUSE:
+                mev = curses.getmouse()
+                y = mev[2]
+                button = mev[4]
+                log.debug("y: %d, b: %d" % (y, button))
+                hl = items.key_i(y-1)
+
+                # i have no idea about the pattern, st sends these for scroll up/down
+                if (button & curses.BUTTON4_CLICKED) != 0:
+                    items.set_volume(hl, items.get_volume(hl) + optz.adjust_step)
+                elif (button & 256) != 0:
+                    items.set_volume(hl, items.get_volume(hl) - optz.adjust_step)
+
             if key in (curses.KEY_DOWN, ord('j')):
                 hl = items.next_key(hl)
             elif key in (curses.KEY_UP, ord('k')):
