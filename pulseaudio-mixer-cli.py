@@ -217,6 +217,10 @@ class PAMenu(dict):
         stream = self.bus.get_object(object_path=path)
         name = self._name(iface, dict(stream.Get(
             'org.PulseAudio.Core1.{}'.format(iface), 'PropertyList')))
+        suffix = ''
+        while (name+suffix) in self:
+                suffix += 'I'
+        name += suffix;
         self[name] = iface, stream
         if len(name) > self.max_key_len:
             self.max_key_len = len(name)
