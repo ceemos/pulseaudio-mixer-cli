@@ -50,15 +50,18 @@ if not optz.verbose and not optz.debug:
 
 def get_bus_address():
     srv_addr = os.environ.get('PULSE_DBUS_SERVER')
+    print('1 ', srv_addr)
     if not srv_addr\
             and os.access('/run/pulse/dbus-socket', os.R_OK | os.W_OK):
         # Well-known system-wide daemon socket
         srv_addr = 'unix:path=/run/pulse/dbus-socket'
+    print('2 ', srv_addr)
     if not srv_addr:
         srv_addr = dbus.SessionBus().get_object(
             'org.PulseAudio1', '/org/pulseaudio/server_lookup1')\
             .Get('org.PulseAudio.ServerLookup1',
                  'Address', dbus_interface='org.freedesktop.DBus.Properties')
+    print('3 ', srv_addr)
     return srv_addr
 
 
@@ -478,9 +481,10 @@ def interactive_cli(stdscr, items, border=0):
                 hl = items.key_i(y-1)
 
                 # i have no idea about the pattern, st sends these for scroll up/down
-                if (button & curses.BUTTON4_CLICKED) != 0:
+                # print(button)
+                if (button & 2**19) != 0:
                     items.set_volume(hl, items.get_volume(hl) + optz.adjust_step)
-                elif (button & 256) != 0:
+                elif (button & 2**7) != 0:
                     items.set_volume(hl, items.get_volume(hl) - optz.adjust_step)
 
             if key in (curses.KEY_DOWN, ord('j')):
